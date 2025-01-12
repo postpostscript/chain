@@ -2,7 +2,8 @@
   "tasks": {
     "dev": "deno run --watch main.ts",
     "coverage": "rm -rf coverage/profile && deno test -A --coverage=coverage/profile && deno coverage --lcov --output=coverage/cov.lcov",
-    "coverage-html": "deno task coverage && genhtml -o coverage/html coverage/cov.lcov"
+    "coverage-html": "deno task coverage && genhtml -o coverage/html coverage/cov.lcov",
+    "docs": "rm -rf docs && deno doc --html --name=Chain mod.ts"
   },
   "lint": {
     "rules": {
