@@ -138,21 +138,32 @@ export class Chain<
       handleError,
       signal,
     }: {
-      handleError?: (e: unknown) => MaybePromise<ChainState | void>;
+      handleError?: (
+        e: unknown,
+        state: ChainState | undefined
+      ) => MaybePromise<ChainState | void>;
       signal?: AbortSignal;
     } = {}
   ): Promise<TReturn> {
-    let _state = state;
+    const handle = this.init(state, {
+      signal,
+    });
     while (true) {
       try {
-        return await this.exec(_state, { throwOnInterrupt: true, signal });
+        const result = await handle.advance();
+        if (result.done) {
+          return result.value;
+        } else if (result.interrupt) {
+          throw result.interrupt;
+        }
+        continue;
       } catch (e) {
         if (e instanceof AbortError) {
           throw e;
         } else if (handleError) {
-          _state = (await handleError(e)) ?? _state;
+          handle.state = (await handleError(e, handle.state)) ?? handle.state;
         } else if (e instanceof Interrupt) {
-          _state = e.state;
+          handle.state = e.state;
         } else {
           throw e;
         }
