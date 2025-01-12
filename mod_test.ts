@@ -1,5 +1,4 @@
 import {
-  assert,
   assertEquals,
   assertInstanceOf,
   assertObjectMatch,
@@ -28,7 +27,7 @@ Deno.test(async function newTest() {
   assertEquals(
     await Chain.new().exec(),
     undefined,
-    "empty chain resolves to undefined",
+    "empty chain resolves to undefined"
   );
   assertEquals(await Chain.new(() => 1).exec(), 1);
 
@@ -100,14 +99,14 @@ Deno.test(async function anyTest() {
   assertEquals(
     await Chain.any([slow, fast, error]).exec(),
     "fast",
-    "resolves when one errors",
+    "resolves when one errors"
   );
   await wait(5);
 
   assertEquals(
     await Chain.any([slow, fast, interrupt]).exec(),
     "fast",
-    "resolves when one interrupts",
+    "resolves when one interrupts"
   );
   await wait(5);
 
@@ -146,7 +145,7 @@ Deno.test(async function raceTest() {
   assertEquals(
     await Chain.race([slow, fast, interrupt]).exec(),
     "fast",
-    "resolves when one interrupts",
+    "resolves when one interrupts"
   );
   await wait(5);
 
@@ -283,7 +282,7 @@ Deno.test(async function signalTest() {
   assertInstanceOf(
     abortImmediateResult,
     AbortError,
-    "errors when already aborted",
+    "errors when already aborted"
   );
 
   const abortFast = new AbortController();
@@ -296,7 +295,7 @@ Deno.test(async function signalTest() {
   assertInstanceOf(
     abortFastResult,
     AbortError,
-    "errors when aborts after started but before chain resolves",
+    "errors when aborts after started but before chain resolves"
   );
   await wait(5);
 
@@ -310,7 +309,7 @@ Deno.test(async function signalTest() {
   assertEquals(
     abortSlowResult,
     "fast",
-    "succeeds when aborts after chain resolves",
+    "succeeds when aborts after chain resolves"
   );
   await wait(5);
 });
