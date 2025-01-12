@@ -15,7 +15,7 @@ export class ChainHandle<TReturn> {
       index: 0,
       value: undefined,
     },
-    opts?: ChainHandleOpts
+    opts?: ChainHandleOpts,
   ) {
     this.chain = chain;
     this.state = state;
@@ -28,15 +28,15 @@ export class ChainHandle<TReturn> {
 
   async advance(): Promise<
     | {
-        done: true;
-        value: TReturn;
-        handle: ChainHandle<TReturn>;
-      }
+      done: true;
+      value: TReturn;
+      handle: ChainHandle<TReturn>;
+    }
     | {
-        done: false;
-        interrupt: Interrupt | undefined;
-        handle: ChainHandle<TReturn>;
-      }
+      done: false;
+      interrupt: Interrupt | undefined;
+      handle: ChainHandle<TReturn>;
+    }
   > {
     if (this.done) {
       return {
@@ -54,9 +54,9 @@ export class ChainHandle<TReturn> {
     try {
       value = await abortable(
         Promise.resolve(
-          chain.method(this.state.value, this.state.intermediateState)
+          chain.method(this.state.value, this.state.intermediateState),
         ),
-        this.opts?.signal
+        this.opts?.signal,
       );
     } catch (err) {
       if (!(err instanceof Interrupt)) {
@@ -98,15 +98,15 @@ export class ChainHandle<TReturn> {
 
   async untilDone(): Promise<
     | {
-        done: true;
-        value: TReturn;
-        handle: ChainHandle<TReturn>;
-      }
+      done: true;
+      value: TReturn;
+      handle: ChainHandle<TReturn>;
+    }
     | {
-        done: false;
-        interrupt: Interrupt;
-        handle: ChainHandle<TReturn>;
-      }
+      done: false;
+      interrupt: Interrupt;
+      handle: ChainHandle<TReturn>;
+    }
   > {
     this.interrupt = undefined;
     while (!(this.done || this.interrupt)) {

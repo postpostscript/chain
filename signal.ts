@@ -5,7 +5,7 @@ export function abortable<T>(promise: MaybePromise<T>, signal?: AbortSignal) {
     return Promise.reject(
       new AbortError("signal aborted", {
         cause: signal,
-      })
+      }),
     );
   }
 
@@ -22,7 +22,7 @@ export function abortable<T>(promise: MaybePromise<T>, signal?: AbortSignal) {
     reject(
       new AbortError("signal aborted", {
         cause: signal,
-      })
+      }),
     );
   };
 

@@ -5,12 +5,12 @@ import { Interrupt } from "./interrupt.ts";
 import { AbortError } from "./signal.ts";
 import type { MaybePromise } from "./types/util.ts";
 import type {
-  ChainMethod,
-  ChainArgument,
-  ChainState,
-  ChainResolve,
   ChainAllResult,
   ChainAnyResult,
+  ChainArgument,
+  ChainMethod,
+  ChainResolve,
+  ChainState,
 } from "./types/chain.ts";
 import { ChainHandleOpts } from "./types/chain_handle.ts";
 
@@ -20,7 +20,7 @@ export class Chain<
   // deno-lint-ignore no-explicit-any
   TState = any,
   // deno-lint-ignore no-explicit-any
-  TPrev = any
+  TPrev = any,
 > {
   index = 0;
   parent: Chain<TPrev, TInitial> | undefined;
@@ -31,16 +31,16 @@ export class Chain<
   }
 
   then<TNextReturn, TNextState = unknown>(
-    method: ChainArgument<TNextReturn, TReturn, TNextState>
+    method: ChainArgument<TNextReturn, TReturn, TNextState>,
   ): Chain<TNextReturn, TInitial, TNextState, TReturn> {
     if (arguments.length === 2) {
       throw new Error(
-        "Chain.prototype.then only accepts one argument (Chain instances cannot be awaited)"
+        "Chain.prototype.then only accepts one argument (Chain instances cannot be awaited)",
       );
     }
 
     const child = Chain.new<TNextReturn, TReturn, TNextState>(
-      method
+      method,
     ) as unknown as Chain<TNextReturn, TInitial, TNextState, TReturn>;
     child.index = this.index + 1;
     child.parent = this;
@@ -48,7 +48,7 @@ export class Chain<
   }
 
   catch<TNext, TError = unknown, TState = unknown>(
-    handleError: ChainArgument<TNext, TError, TState>
+    handleError: ChainArgument<TNext, TError, TState>,
   ): Chain<TReturn | TNext, TInitial> {
     return Chain.new(
       async (previous: TInitial, state: ChainState | undefined) => {
@@ -57,7 +57,7 @@ export class Chain<
             state ?? {
               index: 0,
               value: previous,
-            }
+            },
           );
           if (value instanceof Interrupt) {
             return value;
@@ -67,7 +67,7 @@ export class Chain<
         } catch (e) {
           return [false, e as TError] as const;
         }
-      }
+      },
     ).then(
       (result, state?: ChainState): Promise<TReturn | TNext | Interrupt> => {
         if (result[0]) {
@@ -78,14 +78,14 @@ export class Chain<
           state ?? {
             index: 0,
             value: result[1],
-          }
+          },
         );
-      }
+      },
     );
   }
 
   finally(
-    arg: ChainArgument<unknown, void, unknown>
+    arg: ChainArgument<unknown, void, unknown>,
   ): Chain<TReturn, TInitial, ChainState, TReturn> {
     return this.then(async (value, state) => {
       const result = await Chain.new(arg).exec(state);
@@ -101,7 +101,7 @@ export class Chain<
       index: 0,
       value: undefined,
     },
-    opts?: ChainHandleOpts
+    opts?: ChainHandleOpts,
   ) {
     return new ChainHandle(this, state, opts);
   }
@@ -111,7 +111,7 @@ export class Chain<
     opts?: {
       throwOnInterrupt?: TThrow;
       signal?: AbortSignal;
-    }
+    },
   ): Promise<TThrow extends true ? TReturn : TReturn | Interrupt> {
     const handle = this.init(state || { index: 0, value: undefined }, {
       signal: opts?.signal,
@@ -123,7 +123,7 @@ export class Chain<
       const interrupt = Interrupt.new(
         result.interrupt.reason,
         handle.state,
-        this
+        this,
       );
       if (opts?.throwOnInterrupt) {
         throw interrupt;
@@ -140,10 +140,10 @@ export class Chain<
     }: {
       handleError?: (
         e: unknown,
-        state: ChainState | undefined
+        state: ChainState | undefined,
       ) => MaybePromise<ChainState | void>;
       signal?: AbortSignal;
-    } = {}
+    } = {},
   ): Promise<TReturn> {
     const handle = this.init(state, {
       signal,
@@ -173,16 +173,16 @@ export class Chain<
 
   static new(): Chain<void>;
   static new<TReturn, TInitial, TState>(
-    value: Chain<TReturn, TInitial, TState>
+    value: Chain<TReturn, TInitial, TState>,
   ): Chain<TReturn, TInitial, ChainState, TInitial>;
   static new<TReturn, TInitial, TState>(
-    value: ChainMethod<TReturn, TInitial, TState>
+    value: ChainMethod<TReturn, TInitial, TState>,
   ): Chain<TReturn, TInitial, TState, TInitial>;
   static new<TReturn, TInitial, TState>(
-    value: ChainArgument<TReturn, TInitial, TState>
+    value: ChainArgument<TReturn, TInitial, TState>,
   ): Chain<TReturn, TInitial, TState, TInitial>;
   static new<TReturn, TInitial, TState>(
-    value?: ChainArgument<TReturn, TInitial, TState>
+    value?: ChainArgument<TReturn, TInitial, TState>,
   ): Chain<TReturn, TInitial, TState | ChainState, TInitial> | Chain<void> {
     if (!value) {
       return new Chain<void>(() => {});
@@ -190,13 +190,13 @@ export class Chain<
     const method: ChainMethod<TReturn, TInitial, TState | ChainState> =
       typeof value === "object"
         ? (((result: TInitial, state?: ChainState) => {
-            return value.exec(
-              state ?? {
-                index: 0,
-                value: result,
-              }
-            );
-          }) as ChainMethod<TReturn, TInitial, TState | ChainState>)
+          return value.exec(
+            state ?? {
+              index: 0,
+              value: result,
+            },
+          );
+        }) as ChainMethod<TReturn, TInitial, TState | ChainState>)
         : (value as ChainMethod<TReturn, TInitial, TState | ChainState>);
     return new Chain<TReturn, TInitial, TState | ChainState, TInitial>(method);
   }
@@ -209,7 +209,7 @@ export class Chain<
 
   static all<
     TInitial extends unknown,
-    const Chains extends Chain<unknown, TInitial>[]
+    const Chains extends Chain<unknown, TInitial>[],
   >(chains: Chains): Chain<ChainAllResult<Chains>, TInitial> {
     return Chain.new(async (initial: TInitial, state: ChainState[] = []) => {
       const results = await Promise.all(
@@ -219,10 +219,10 @@ export class Chain<
               state[i] || {
                 index: 0,
                 value: initial,
-              }
+              },
             )
             .untilDone();
-        })
+        }),
       );
 
       let done = true;
@@ -233,7 +233,7 @@ export class Chain<
       for (const result of results) {
         values.push("value" in result ? result.value : undefined);
         reasons.push(
-          "interrupt" in result ? result.interrupt.reason : undefined
+          "interrupt" in result ? result.interrupt.reason : undefined,
         );
         states.push(result.handle.state);
 
@@ -249,7 +249,7 @@ export class Chain<
   }
 
   static any<const Chains extends Chain<unknown>[]>(
-    chains: Chains
+    chains: Chains,
   ): Chain<ChainAnyResult<Chains>> {
     return Chain.new((_, state: ChainState[] = []) => {
       //   console.log("cahin method running", state);
@@ -269,7 +269,7 @@ export class Chain<
                   state[i] || {
                     index: 0,
                     value: undefined,
-                  }
+                  },
                 )
                 .untilDone();
 
@@ -288,7 +288,7 @@ export class Chain<
                 error,
               } as const;
             }
-          })
+          }),
         );
 
         if (resolved) {
@@ -327,7 +327,7 @@ export class Chain<
   }
 
   static race<const Chains extends Chain<unknown>[]>(
-    chains: Chains
+    chains: Chains,
   ): Chain<ChainAnyResult<Chains>> {
     const wrappedChains = chains.map((chain) =>
       chain

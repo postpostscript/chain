@@ -14,7 +14,7 @@ export class Interrupt<TReason = unknown, TState = unknown> {
   static new<TReason, TState>(
     reason: TReason,
     state?: TState,
-    chain?: Chain<unknown>
+    chain?: Chain<unknown>,
   ) {
     return new Interrupt(reason, state, chain);
   }
