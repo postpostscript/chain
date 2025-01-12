@@ -65,16 +65,16 @@ export class ChainHandle<TReturn> {
       value = err;
     }
     if (value instanceof Interrupt) {
-      this.interrupt = value;
       value.chain ??= chain;
       if (value.state !== undefined) {
         this.state.intermediateState = value.state;
       } else {
         delete this.state.intermediateState;
       }
+      this.interrupt = Interrupt.new(value, this.state, chain);
       return {
         done: false,
-        interrupt: Interrupt.new(value, this.state),
+        interrupt: this.interrupt,
         handle: this,
       };
     }
