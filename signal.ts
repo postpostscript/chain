@@ -1,21 +1,24 @@
-import { MaybePromise } from "./types/util.ts";
+import type { MaybePromise } from "./types/util.ts";
 
 export function abortable<T>(promise: MaybePromise<T>, signal?: AbortSignal) {
+  if (signal?.aborted) {
+    return Promise.reject(
+      new AbortError("signal aborted", {
+        cause: signal,
+      })
+    );
+  }
+
   const _promise = Promise.resolve(promise);
 
   if (!signal) {
     return _promise;
   }
 
-  let resolved = false;
-
   const { resolve, reject, promise: result } = Promise.withResolvers<T>();
 
   const handler = () => {
     cleanup();
-    if (resolved) {
-      return;
-    }
     reject(
       new AbortError("signal aborted", {
         cause: signal,
@@ -24,7 +27,6 @@ export function abortable<T>(promise: MaybePromise<T>, signal?: AbortSignal) {
   };
 
   function cleanup() {
-    resolved = true;
     signal!.removeEventListener("abort", handler);
   }
 
