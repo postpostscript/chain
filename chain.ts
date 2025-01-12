@@ -201,7 +201,7 @@ export class Chain<
     return new Chain<TReturn, TInitial, TState | ChainState, TInitial>(method);
   }
 
-  static resolve<T>(value: T): ChainResolve<T> {
+  static resolve<const T>(value: T): ChainResolve<T> {
     return (
       value instanceof Chain ? value : Chain.new(() => value)
     ) as ChainResolve<T>;
