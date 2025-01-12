@@ -74,7 +74,7 @@ export class ChainHandle<TReturn> {
       }
       return {
         done: false,
-        interrupt: value,
+        interrupt: Interrupt.new(value, this.state),
         handle: this,
       };
     }
