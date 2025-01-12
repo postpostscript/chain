@@ -1,0 +1,10 @@
+{
+  "tasks": {
+    "dev": "deno run --watch main.ts"
+  },
+  "lint": {
+    "rules": {
+      "exclude": ["no-misused-new"]
+    }
+  }
+}
