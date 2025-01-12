@@ -22,6 +22,9 @@ export class Chain<
   // deno-lint-ignore no-explicit-any
   TPrev = any,
 > {
+  // @ts-ignore: see typeTest, tag is necessary to cause type warnings for TInitial
+  #_tag_TInitial: TInitial;
+
   index = 0;
   parent: Chain<TPrev, TInitial> | undefined;
   method: ChainMethod<TReturn, TPrev, TState>;
@@ -85,7 +88,8 @@ export class Chain<
   }
 
   finally(
-    arg: ChainArgument<unknown, void, unknown>,
+    // deno-lint-ignore no-explicit-any
+    arg: ChainArgument<unknown, any, unknown>,
   ): Chain<TReturn, TInitial, ChainState, TReturn> {
     return this.then(async (value, state) => {
       const result = await Chain.new(arg).exec(state);
@@ -176,16 +180,35 @@ export class Chain<
     value: Chain<TReturn, TInitial, TState>,
   ): Chain<TReturn, TInitial, ChainState, TInitial>;
   static new<TReturn, TInitial, TState>(
+    value: () => MaybePromise<TReturn | Interrupt>,
+  ): Chain<
+    TReturn extends Interrupt ? never
+      : TReturn,
+    // deno-lint-ignore no-explicit-any
+    any,
+    TState,
+    // deno-lint-ignore no-explicit-any
+    any
+  >;
+  static new<TReturn, TInitial, TState>(
     value: ChainMethod<TReturn, TInitial, TState>,
-  ): Chain<TReturn, TInitial, TState, TInitial>;
+  ): Chain<
+    TReturn extends Interrupt ? never
+      : TReturn,
+    TInitial,
+    TState,
+    TInitial
+  >;
   static new<TReturn, TInitial, TState>(
     value: ChainArgument<TReturn, TInitial, TState>,
   ): Chain<TReturn, TInitial, TState, TInitial>;
   static new<TReturn, TInitial, TState>(
     value?: ChainArgument<TReturn, TInitial, TState>,
-  ): Chain<TReturn, TInitial, TState | ChainState, TInitial> | Chain<void> {
+  ):
+    | Chain<TReturn | never, TInitial, TState | ChainState, TInitial>
+    | Chain<void> {
     if (!value) {
-      return new Chain<void>(() => {});
+      return new Chain(() => {});
     }
     const method: ChainMethod<TReturn, TInitial, TState | ChainState> =
       typeof value === "object"
@@ -251,7 +274,8 @@ export class Chain<
   static any<const Chains extends Chain<unknown>[]>(
     chains: Chains,
   ): Chain<ChainAnyResult<Chains>> {
-    return Chain.new((_, state: ChainState[] = []) => {
+    // deno-lint-ignore no-explicit-any
+    return Chain.new((_: any, state: ChainState[] = []) => {
       //   console.log("cahin method running", state);
       const { promise, resolve, reject } = Promise.withResolvers<
         ChainAnyResult<Chains> | Interrupt

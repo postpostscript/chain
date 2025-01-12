@@ -207,7 +207,8 @@ Deno.test(async function execTest() {
   }, "errors interrupts and throwOnInterrupt: true");
 
   let timesCalled = 0;
-  const counter = Chain.new((_, state: number = 0) => {
+  // deno-lint-ignore no-explicit-any
+  const counter = Chain.new((_: any, state: number = 0) => {
     const next = state + 1;
     timesCalled += 1;
     if (next < 5) {
@@ -243,7 +244,9 @@ Deno.test(async function execTest() {
     },
   });
 
-  const skipResult = await interrupt.then(one).execRepeatedly(undefined, {
+  const skipResult = await interrupt.then(() =>
+    one.exec(undefined, { throwOnInterrupt: true })
+  ).execRepeatedly(undefined, {
     handleError(error) {
       if (error instanceof Interrupt) {
         return {
@@ -312,4 +315,18 @@ Deno.test(async function signalTest() {
     "succeeds when aborts after chain resolves",
   );
   await wait(5);
+});
+
+Deno.test(function typeTest() {
+  function transformString(
+    value: string,
+    chain: Chain<string, string>,
+  ) {
+    return Chain.resolve(value).then(chain);
+  }
+
+  const chain = Chain.new((x: number) => x.toString());
+
+  // @ts-expect-error: test TInitial test
+  transformString("test", chain);
 });
